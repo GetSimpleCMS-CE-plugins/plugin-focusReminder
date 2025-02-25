@@ -1,6 +1,5 @@
 <?php
 
-
 # get correct id for plugin
 $thisfile = basename(__FILE__, ".php");
 
@@ -23,48 +22,52 @@ add_action('theme-footer', 'focusReminderFront');
 add_action('plugins-sidebar', 'createSideMenu', array($thisfile, 'focusReminder Settings'));
 
 # functions
-function focusReminderFront()
-{
-
-
+function focusReminderFront(){
 	if (file_exists(GSDATAOTHERPATH . 'focusReminder.json')) {
 		$fr = file_get_contents(GSDATAOTHERPATH . 'focusReminder.json');
 		$fr = json_decode($fr, true);
 
-		echo '<script>
-document.addEventListener("DOMContentLoaded", function() {
-    var originalTitle = document.title; // Zapisz oryginalny tytuł strony
+		echo '
+		<script>
+			let originalTitle = document.title;
+			let scrollMessage = "' . $fr['text'] . ' . . . "; // Scrolling message
+			let scrollInterval;
 
-    document.addEventListener("visibilitychange", function() {
-        if (document.hidden) {
-            document.title = "' . $fr['text'] . '";
-        } else {
-            document.title = originalTitle; // Przywróć oryginalny tytuł
-        }
-    });
-});
-</script>';
+			function startScrollingTitle() {
+				let index = 0;
+				scrollInterval = setInterval(() => {
+					document.title = scrollMessage.substring(index) + scrollMessage.substring(0, index);
+					index = (index + 1) % scrollMessage.length;
+				}, 250); // Scrolling speed
+			}
 
+			function stopScrollingTitle() {
+				clearInterval(scrollInterval);
+				document.title = originalTitle;
+			}
+
+			document.addEventListener("visibilitychange", () => {
+				if (document.hidden) {
+					startScrollingTitle();
+				} else {
+					stopScrollingTitle();
+				}
+			});
+		</script>';
 	};
-
-
 }
 
-function focusReminder()
-{
-
+function focusReminder(){
 	if (file_exists(GSDATAOTHERPATH . 'focusReminder.json')) {
 		$fr = file_get_contents(GSDATAOTHERPATH . 'focusReminder.json');
 		$fr = json_decode($fr, true);
-	}
-	;
+	};
 
 	echo '
-	
-	<form method="post" style="box-sizing:border-box;padding:15px;border:solid 1px #ddd;background:#fafafa">
-	<h3>FocusReminder Settings</h3>
-	<input type="text" placeholder=" `Back to my page` text" name="focustext" value="' . @$fr['text'] . '" style="width:100%;padding:10px;border-radius:5px;box-sizing:border-box;border:solid 1px #ddd">
-	<input type="submit" name="savefocus" style="background:red;padding:10px 15px;color:#fff;display:inline-block;border:none;border-radius:4px;margin-top:20px;">
+	<form method="post" style="box-sizing:border-box; padding:15px; border:solid 1px #ddd; background:#fafafa">
+		<h3>FocusReminder Settings</h3>
+		<input type="text" placeholder=" `Come back! You\'re missing out!` text" name="focustext" value="' . @$fr['text'] . '" style="width:100%; padding:10px; border-radius:5px; box-sizing:border-box; border:solid 1px #ddd">
+		<input type="submit" name="savefocus" style="background:red; padding:10px 15px; color:#fff; display:inline-block; border:none; border-radius:4px; margin-top:20px;">
 	</form>
 	<div id="paypal" style="padding-top:10px">
 			<style>
@@ -97,16 +100,12 @@ function focusReminder()
 		</div>
 	';
 
-
 	if (isset($_POST['savefocus'])) {
-
 		$focusReminder = [];
 		$focusReminder['text'] = $_POST['focustext'];
 		$focusReminder = json_encode($focusReminder);
 		file_put_contents(GSDATAOTHERPATH . 'focusReminder.json', $focusReminder);
 		echo ("<meta http-equiv='refresh' content='0'>");
-	}
-	;
-
+	};
 }
 ?>
